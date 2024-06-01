@@ -83,7 +83,12 @@ def process_input(new_entries):
 
     # Get today's date with ordinal suffix and year
     today_date = datetime.now()
-    day_with_ordinal = f"{today_date.day}st" if today_date.day == 1 else ordinal(today_date.day)
+    day = today_date.day
+    if 10 <= day % 100 <= 20:
+        suffix = 'th'
+    else:
+        suffix = {1: 'st', 2: 'nd', 3: 'rd'}.get(day % 10, 'th')
+    day_with_ordinal = f"{day}{suffix}"
     formatted_date = today_date.strftime(f"%B {day_with_ordinal} %Y")
 
     # Print the formatted output to the console
