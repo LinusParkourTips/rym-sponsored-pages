@@ -83,7 +83,7 @@ def process_input(new_entries):
 
     # Get today's date with ordinal suffix and year
     today_date = datetime.now()
-    day_with_ordinal = ordinal(today_date.day)
+    day_with_ordinal = f"{today_date.day}st" if today_date.day == 1 else ordinal(today_date.day)
     formatted_date = today_date.strftime(f"%B {day_with_ordinal} %Y")
 
     # Print the formatted output to the console
