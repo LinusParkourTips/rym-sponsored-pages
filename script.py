@@ -10,7 +10,7 @@ def process_line(line):
         username = match.group(1)
         album = match.group(2)
         number = match.group(3)
-        return f'{username},{album},{number}\n'  # Comma-separated with newline
+        return f'{username},"{album}",{number}\n'  # Comma-separated with quotes around album and newline
     else:
         return None
 
@@ -22,9 +22,6 @@ error_file = 'C:/Users/Linus/Documents/txt files/daily/errors.log'
 with open(input_file, 'r', encoding='utf-8') as infile, \
      open(output_file, 'w', encoding='utf-8') as outfile, \
      open(error_file, 'w', encoding='utf-8') as errfile:
-    
-    # Write the header
-    outfile.write('username,artist and album title,number\n')
     
     # Process each line and write to the CSV
     for line_number, line in enumerate(infile, start=1):
