@@ -26,7 +26,6 @@ def count_album_occurrences(csv_file):
     counter = Counter()
     with open(csv_file, 'r', encoding='utf-8') as file:
         reader = csv.reader(file)
-        next(reader)  # Skip the header
         for row in reader:
             if len(row) >= 2:  # Ensure row has at least two values
                 album = row[1]
