@@ -58,9 +58,9 @@ def ordinal(n):
         return f'{n}{suffix}'
 
 # Paths to the input files
-csv_file = 'C:/Users/Linus/Documents/txt files/daily/rymsponsoredwithnames.csv'
-output_txt_file = 'C:/Users/Linus/Documents/txt files/daily/rymsponsoredwithnames.txt'
-script_file = 'C:/Users/Linus/Documents/txt files/daily/script.py'  # Path to the script you want to run
+csv_file = 'rymsponsoredwithnames.csv'
+output_txt_file = 'rymsponsoredwithnames.txt'
+script_file = 'script.py' 
 
 # Count occurrences of artist and album titles in the existing CSV file
 album_counter = count_album_occurrences(csv_file)
