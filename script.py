@@ -15,9 +15,9 @@ def process_line(line):
         return None
 
 # Read the input file
-input_file = 'C:/Users/Linus/Documents/txt files/daily/rymsponsoredwithnames.txt'
-output_file = 'C:/Users/Linus/Documents/txt files/daily/rymsponsoredwithnames.csv'
-error_file = 'C:/Users/Linus/Documents/txt files/daily/errors.log'
+input_file = 'rymsponsoredwithnames.txt'
+output_file = 'rymsponsoredwithnames.csv'
+error_file = 'errors.log'
 
 with open(input_file, 'r', encoding='utf-8') as infile, \
      open(output_file, 'w', encoding='utf-8') as outfile, \
