@@ -1,10 +1,16 @@
 import csv
 import re
+import os
 from collections import Counter
 from datetime import datetime
 import tkinter as tk
 from tkinter import scrolledtext, messagebox
 from screeninfo import get_monitors
+
+
+# Get the script's directory and change the working directory
+script_dir = os.path.dirname(os.path.abspath(__file__))
+os.chdir(script_dir)
 
 # Regular expression pattern to match the lines (if needed for processing)
 pattern = re.compile(r'^(.*?):\s*(.*?)\s*$')
@@ -64,8 +70,8 @@ def ordinal(n):
             suffix = {1: 'st', 2: 'nd', 3: 'rd'}.get(n % 10, 'th')
         return f'{n}{suffix}'
 
-# Paths to the input CSV file
-csv_file = "C:/Users/Linus/Documents/txt files/rym/rymsponsoredwithnames.csv"
+# Define the correct file path
+csv_file = os.path.join(script_dir, "rymsponsoredwithnames.csv")
 
 # Count occurrences of artist and album titles in the existing CSV file
 album_counter = count_album_occurrences(csv_file)
@@ -153,10 +159,24 @@ frame.rowconfigure(1, weight=1)
 submit_button = tk.Button(root, text="Submit", command=on_submit)
 submit_button.pack(pady=5)
 
-# Position the window on the right monitor if available
+# Get screen dimensions using screeninfo
 monitors = get_monitors()
-if len(monitors) > 1:
-    right_monitor = max(monitors, key=lambda m: m.x)
-    root.geometry(f"+{right_monitor.x}+{right_monitor.y}")
+if len(monitors) >= 3:
+    # Assuming the third monitor is the right monitor
+    right_monitor = monitors[2]
+    right_monitor_width = right_monitor.width
+    right_monitor_height = right_monitor.height
+
+    # Set the window position to the right monitor
+    x_position = right_monitor.x + 50  # 50 pixels from the left edge of the right monitor
+    y_position = 50  # 50 pixels from the top of the right monitor
+
+    # Set window geometry
+    window_width = 1000
+    window_height = 500
+    root.geometry(f"{window_width}x{window_height}+{x_position}+{y_position}")
+else:
+    messagebox.showerror("Error", "Less than 3 monitors detected. Cannot position on the right monitor.")
+    root.quit()
 
 root.mainloop()
