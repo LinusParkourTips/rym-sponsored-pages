@@ -126,7 +126,10 @@ def on_submit():
 
     # Save the updated entries to the CSV file in reversed order using our custom formatting
     save_album_counts_to_csv(csv_file, album_counter, new_entries)
-    messagebox.showinfo("Success", "Entries processed and saved successfully!")
+
+    # Print success message to the terminal
+    print("Script has executed successfully")
+
 
 # Create the GUI application
 root = tk.Tk()
