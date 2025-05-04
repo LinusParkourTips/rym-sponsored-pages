@@ -19,7 +19,7 @@ os.chdir(script_dir)
 pattern = re.compile(r'^(.*?):\s*(.*?)\s*$')
 
 def count_album_occurrences(csv_file):
-    """Read the CSV file and count occurrences of artist and album titles."""
+    # Read the CSV file and count occurrences of artist and album titles.
     counter = Counter()
     try:
         with open(csv_file, 'r', encoding='utf-8') as file:
@@ -33,18 +33,19 @@ def count_album_occurrences(csv_file):
     return counter
 
 def save_album_counts_to_csv(csv_file, album_counter, input_entries):
-    """Save the updated album counts to the CSV file in reversed order."""
-    with open(csv_file, 'a', encoding='utf-8') as file:
+    # Save the updated album counts to the CSV file in reversed order.
+    with open(csv_file, 'a', encoding='utf-8', newline='') as file:
+        writer = csv.writer(file, quoting=csv.QUOTE_MINIMAL)
         for line in reversed(input_entries):
             try:
                 username, album = line.split(': ', 1)
             except ValueError:
                 continue  # Skip lines that do not match the expected format
             count = album_counter[album]
-            file.write(f'{username},"{album}",{count}\n')
+            writer.writerow([username, album, count])
 
 def process_new_entries(new_entries, album_counter):
-    """Process new entries and update the album counter."""
+    # Process new entries and update the album counter.
     for line in new_entries:
         try:
             username, album = line.split(': ', 1)
@@ -53,7 +54,7 @@ def process_new_entries(new_entries, album_counter):
         album_counter[album] += 1
 
 def ordinal(n):
-    """Convert a number to its ordinal representation."""
+    # Convert a number to its ordinal representation.
     ordinal_words = {
         1: 'First', 2: 'Second', 3: 'Third', 4: 'Fourth', 
         5: 'Fifth', 6: 'Sixth', 7: 'Seventh', 8: 'Eighth', 9: 'Ninth'
@@ -68,7 +69,7 @@ def ordinal(n):
         return f'{n}{suffix}'
 
 def process_input(new_entries):
-    """Process the input from the GUI and return output messages for display."""
+    # Process the input from the GUI and return output messages for display.
     process_new_entries(new_entries, album_counter)
     
     today_date = datetime.now()
@@ -93,7 +94,7 @@ def process_input(new_entries):
     return output_messages[::-1]
 
 def display_processed_entries(output_messages):
-    """Display the processed entries in the GUI."""
+    # Display the processed entries in the GUI.
     output_text = "\n\n".join(output_messages)
     output_text_area.config(state=tk.NORMAL)
     output_text_area.delete(1.0, tk.END)
@@ -101,7 +102,7 @@ def display_processed_entries(output_messages):
     output_text_area.config(state=tk.DISABLED)
 
 def on_submit():
-    """Handle the Submit button click in the GUI."""
+    # Handle the Submit button click in the GUI.
     new_entries = text_area.get("1.0", tk.END).strip().split('\n')
     if not new_entries or new_entries == ['']:
         messagebox.showerror("Error", "No entries provided")
