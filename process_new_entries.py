@@ -5,142 +5,161 @@ from collections import Counter
 from datetime import datetime
 import tkinter as tk
 from tkinter import scrolledtext, messagebox
-from screeninfo import get_monitors
 
 # Constants
 CSV_FILE_NAME = "rymsponsoredwithnames.csv"
 DATE_FORMAT = "%B {day_with_ordinal} %Y"
 
-# Get the script's directory and change the working directory
+# Setup paths
 script_dir = os.path.dirname(os.path.abspath(__file__))
 os.chdir(script_dir)
 
-# Regular expression pattern to match the lines (if needed for processing)
 pattern = re.compile(r'^(.*?):\s*(.*?)\s*$')
 
+
 def count_album_occurrences(csv_file):
-    # Read the CSV file and count occurrences of artist and album titles.
     counter = Counter()
     try:
         with open(csv_file, 'r', encoding='utf-8') as file:
             reader = csv.reader(file)
             for row in reader:
-                if len(row) >= 2:  # Ensure row has at least two values
-                    album = row[1]
-                    counter[album] += 1
+                if len(row) >= 2:
+                    counter[row[1]] += 1
     except FileNotFoundError:
-        print(f"Error: The file '{csv_file}' does not exist.")
+        pass
     return counter
 
+
 def save_album_counts_to_csv(csv_file, album_counter, input_entries):
-    # Save the updated album counts to the CSV file in reversed order.
     with open(csv_file, 'a', encoding='utf-8', newline='') as file:
-        writer = csv.writer(file, quoting=csv.QUOTE_MINIMAL)
+        writer = csv.writer(file)
         for line in reversed(input_entries):
             try:
                 username, album = line.split(': ', 1)
             except ValueError:
-                continue  # Skip lines that do not match the expected format
-            count = album_counter[album]
-            writer.writerow([username, album, count])
+                continue
+            writer.writerow([username, album, album_counter[album]])
+
 
 def process_new_entries(new_entries, album_counter):
-    # Process new entries and update the album counter.
     for line in new_entries:
         try:
-            username, album = line.split(': ', 1)
+            _, album = line.split(': ', 1)
         except ValueError:
-            continue  # Skip lines that do not match the expected format
+            continue
         album_counter[album] += 1
 
+
 def ordinal(n):
-    # Convert a number to its ordinal representation.
-    ordinal_words = {
-        1: 'First', 2: 'Second', 3: 'Third', 4: 'Fourth', 
-        5: 'Fifth', 6: 'Sixth', 7: 'Seventh', 8: 'Eighth', 9: 'Ninth'
-    }
-    if 1 <= n <= 9:
-        return ordinal_words[n]
-    else:
-        if 10 <= n % 100 <= 20:
-            suffix = 'th'
-        else:
-            suffix = {1: 'st', 2: 'nd', 3: 'rd'}.get(n % 10, 'th')
-        return f'{n}{suffix}'
+    words = {1: 'First', 2: 'Second', 3: 'Third', 4: 'Fourth', 5: 'Fifth', 6: 'Sixth', 7: 'Seventh', 8: 'Eighth', 9: 'Ninth'}
+    if n in words:
+        return words[n]
+    if 10 <= n % 100 <= 20:
+        return f"{n}th"
+    return f"{n}{ {1:'st',2:'nd',3:'rd'}.get(n%10,'th') }"
+
 
 def process_input(new_entries):
-    # Process the input from the GUI and return output messages for display.
     process_new_entries(new_entries, album_counter)
-    
-    today_date = datetime.now()
-    day = today_date.day
-    if 10 <= day % 100 <= 20:
-        suffix = 'th'
-    else:
-        suffix = {1: 'st', 2: 'nd', 3: 'rd'}.get(day % 10, 'th')
-    day_with_ordinal = f"{day}{suffix}"
-    formatted_date = today_date.strftime(DATE_FORMAT.format(day_with_ordinal=day_with_ordinal))
 
-    output_messages = []
+    today = datetime.now()
+    day = today.day
+    suffix = 'th' if 10 <= day % 100 <= 20 else {1: 'st', 2: 'nd', 3: 'rd'}.get(day % 10, 'th')
+    date_str = today.strftime(DATE_FORMAT.format(day_with_ordinal=f"{day}{suffix}"))
+
+    items = []
     for line in new_entries:
         try:
             username, album = line.split(': ', 1)
         except ValueError:
             continue
         count = album_counter[album]
-        ordinal_count = ordinal(count)
-        output_messages.append(f"{username}\n\n{formatted_date}\n\n{ordinal_count} time sponsored\n")
-    
-    return output_messages[::-1]
+        text = f"{username}\n\n{date_str}\n\n{ordinal(count)} time sponsored"
+        items.append({"album": album, "text": text})
+    return items[::-1]
 
-def display_processed_entries(output_messages):
-    # Display the processed entries in the GUI.
-    output_text = "\n\n".join(output_messages)
-    output_text_area.config(state=tk.NORMAL)
-    output_text_area.delete(1.0, tk.END)
-    output_text_area.insert(tk.END, output_text)
-    output_text_area.config(state=tk.DISABLED)
+
+def copy_to_clipboard(text):
+    root.clipboard_clear()
+    root.clipboard_append(text)
+    root.update()
+
+
+def show_processed_view(items):
+    input_frame.pack_forget()
+    output_frame.pack(fill=tk.BOTH, expand=True)
+
+    for w in output_frame.winfo_children():
+        w.destroy()
+
+    cols = max(1, min(3, len(items)))
+    selected_card = {"widget": None}
+
+    def select_card(card):
+        if selected_card["widget"] is not None:
+            selected_card["widget"].config(bg=root.cget('bg'))
+        card.config(bg='#d0e4ff')
+        selected_card["widget"] = card
+
+    for i, item in enumerate(items):
+        r, c = divmod(i, cols)
+
+        card = tk.Frame(output_frame, bd=1, relief=tk.SOLID, padx=10, pady=8)
+        card.grid(row=r, column=c, sticky='nsew', padx=8, pady=8)
+
+        output_frame.columnconfigure(c, weight=1)
+        output_frame.rowconfigure(r, weight=1)
+
+        album_label = tk.Label(card, text=f"Album: {item['album']}", fg='gray', font=('TkDefaultFont', 9, 'italic'))
+        album_label.pack(anchor='w')
+
+        text_label = tk.Label(card, text=item['text'], justify='left', cursor='hand2')
+        text_label.pack(anchor='w', fill=tk.BOTH, expand=True)
+
+        def on_click(event, t=item['text'], crd=card):
+            copy_to_clipboard(t)
+            select_card(crd)
+
+        text_label.bind('<Button-1>', on_click)
+        card.bind('<Button-1>', lambda e, crd=card: select_card(crd))
+
+        def resize(event, lbl=text_label, container=card):
+            lbl.config(wraplength=container.winfo_width() - 20)
+
+        card.bind('<Configure>', resize)
+
 
 def on_submit():
-    # Handle the Submit button click in the GUI.
-    new_entries = text_area.get("1.0", tk.END).strip().split('\n')
+    new_entries = text_area.get('1.0', tk.END).strip().split('\n')
     if not new_entries or new_entries == ['']:
-        messagebox.showerror("Error", "No entries provided")
+        messagebox.showerror('Error', 'No entries provided')
         return
 
-    output_messages = process_input(new_entries)
-    display_processed_entries(output_messages)
+    items = process_input(new_entries)
     save_album_counts_to_csv(csv_file, album_counter, new_entries)
-    print("Script has executed successfully")
+    show_processed_view(items)
 
-# Define the correct file path
+
+# Init data
 csv_file = os.path.join(script_dir, CSV_FILE_NAME)
 album_counter = count_album_occurrences(csv_file)
 
-# Create the GUI application
+# GUI
 root = tk.Tk()
-root.title("Enter New Entries")
+root.title('RYM Sponsorship Tool')
 
-frame = tk.Frame(root)
-frame.pack(padx=10, pady=10, fill=tk.BOTH, expand=True)
+input_frame = tk.Frame(root)
+input_frame.pack(fill=tk.BOTH, expand=True)
 
-input_label = tk.Label(frame, text="Enter New Entries:")
-input_label.grid(row=0, column=0, padx=10, pady=(10, 0), sticky='nw')
+output_frame = tk.Frame(root)
 
-text_area = scrolledtext.ScrolledText(frame, wrap=tk.WORD, width=50, height=20)
-text_area.grid(row=1, column=0, padx=10, pady=5, sticky='nsew')
+input_label = tk.Label(input_frame, text='Enter New Entries:')
+input_label.pack(anchor='nw', padx=10, pady=(10, 0))
 
-output_label = tk.Label(frame, text="Processed Entries:")
-output_label.grid(row=0, column=1, padx=10, pady=(10, 0), sticky='nw')
+text_area = scrolledtext.ScrolledText(input_frame, wrap=tk.WORD)
+text_area.pack(fill=tk.BOTH, expand=True, padx=10, pady=5)
 
-output_text_area = scrolledtext.ScrolledText(frame, wrap=tk.WORD, width=50, height=20, state=tk.DISABLED)
-output_text_area.grid(row=1, column=1, padx=10, pady=5, sticky='nsew')
-
-frame.columnconfigure(0, weight=1)
-frame.columnconfigure(1, weight=1)
-frame.rowconfigure(1, weight=1)
-
-submit_button = tk.Button(root, text="Submit", command=on_submit)
-submit_button.pack(pady=5)
+submit_button = tk.Button(input_frame, text='Submit', command=on_submit)
+submit_button.pack(pady=10)
 
 root.mainloop()
