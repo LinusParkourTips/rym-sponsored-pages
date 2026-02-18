@@ -92,7 +92,7 @@ def show_processed_view(items):
     for w in output_frame.winfo_children():
         w.destroy()
 
-    cols = max(1, min(3, len(items)))
+    cols = 3
     selected_card = {"widget": None}
 
     def select_card(card):
@@ -107,11 +107,17 @@ def show_processed_view(items):
         card = tk.Frame(output_frame, bd=1, relief=tk.SOLID, padx=10, pady=8)
         card.grid(row=r, column=c, sticky='nsew', padx=8, pady=8)
 
-        output_frame.columnconfigure(c, weight=1)
+        output_frame.columnconfigure(c, weight=1, uniform='cards')
         output_frame.rowconfigure(r, weight=1)
 
-        album_label = tk.Label(card, text=f"Album: {item['album']}", fg='gray', font=('TkDefaultFont', 9, 'italic'))
-        album_label.pack(anchor='w')
+        album_label = tk.Label(
+            card,
+            text=f"Album: {item['album']}",
+            fg='gray',
+            font=('TkDefaultFont', 9, 'italic'),
+            justify='left'
+        )
+        album_label.pack(anchor='w', fill=tk.X)
 
         text_label = tk.Label(card, text=item['text'], justify='left', cursor='hand2')
         text_label.pack(anchor='w', fill=tk.BOTH, expand=True)
@@ -123,8 +129,11 @@ def show_processed_view(items):
         text_label.bind('<Button-1>', on_click)
         card.bind('<Button-1>', lambda e, crd=card: select_card(crd))
 
-        def resize(event, lbl=text_label, container=card):
-            lbl.config(wraplength=container.winfo_width() - 20)
+        def resize(event, lbl=text_label, album_lbl=album_label, container=card):
+            wrap = container.winfo_width() - 20
+            if wrap > 50:
+                lbl.config(wraplength=wrap)
+                album_lbl.config(wraplength=wrap)
 
         card.bind('<Configure>', resize)
 
@@ -147,6 +156,7 @@ album_counter = count_album_occurrences(csv_file)
 # GUI
 root = tk.Tk()
 root.title('RYM Sponsorship Tool')
+root.geometry('1000x900+3440+200')
 
 input_frame = tk.Frame(root)
 input_frame.pack(fill=tk.BOTH, expand=True)
