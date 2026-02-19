@@ -51,7 +51,10 @@ def process_new_entries(new_entries, album_counter):
 
 
 def ordinal(n):
-    words = {1: 'First', 2: 'Second', 3: 'Third', 4: 'Fourth', 5: 'Fifth', 6: 'Sixth', 7: 'Seventh', 8: 'Eighth', 9: 'Ninth'}
+    words = {
+        1: 'First', 2: 'Second', 3: 'Third', 4: 'Fourth',
+        5: 'Fifth', 6: 'Sixth', 7: 'Seventh', 8: 'Eighth', 9: 'Ninth'
+    }
     if n in words:
         return words[n]
     if 10 <= n % 100 <= 20:
@@ -93,47 +96,71 @@ def show_processed_view(items):
         w.destroy()
 
     cols = 3
-    selected_card = {"widget": None}
+    HIGHLIGHT_BG = "#b6d7ff"
 
-    def select_card(card):
-        if selected_card["widget"] is not None:
-            selected_card["widget"].config(bg=root.cget('bg'))
-        card.config(bg='#d0e4ff')
-        selected_card["widget"] = card
+    selected = {"card": None, "labels": []}
+
+    def clear_selection():
+        if selected["card"] is None:
+            return
+        selected["card"].config(bg=root.cget('bg'))
+        for lbl in selected["labels"]:
+            lbl.config(bg=root.cget('bg'))
+        selected["card"] = None
+        selected["labels"] = []
+
+    def select_card(card, labels):
+        clear_selection()
+        card.config(bg=HIGHLIGHT_BG)
+        for lbl in labels:
+            lbl.config(bg=HIGHLIGHT_BG)
+        selected["card"] = card
+        selected["labels"] = labels
 
     for i, item in enumerate(items):
         r, c = divmod(i, cols)
 
-        card = tk.Frame(output_frame, bd=1, relief=tk.SOLID, padx=10, pady=8)
+        card = tk.Frame(output_frame, bd=1, relief=tk.SOLID, padx=10, pady=4)
         card.grid(row=r, column=c, sticky='nsew', padx=8, pady=8)
+        card.config(cursor='hand2')
 
         output_frame.columnconfigure(c, weight=1, uniform='cards')
         output_frame.rowconfigure(r, weight=1)
 
         album_label = tk.Label(
             card,
-            text=f"Album: {item['album']}",
-            fg='gray',
-            font=('TkDefaultFont', 9, 'italic'),
-            justify='left'
+            text=item['album'],
+            fg='black',
+            font=('TkDefaultFont', 10, 'bold'),
+            justify='left',
+            anchor='w',
+            cursor='hand2'
         )
-        album_label.pack(anchor='w', fill=tk.X)
 
-        text_label = tk.Label(card, text=item['text'], justify='left', cursor='hand2')
-        text_label.pack(anchor='w', fill=tk.BOTH, expand=True)
+        album_label.pack(anchor='w', fill=tk.X, pady=(0, 2))
 
-        def on_click(event, t=item['text'], crd=card):
+        text_label = tk.Label(
+            card,
+            text=item['text'],
+            justify='left',
+            anchor='w',
+            cursor='hand2'
+        )
+        text_label.pack(anchor='w', fill=tk.X)
+
+        def on_click(event, t=item['text'], crd=card, lbls=(album_label, text_label)):
             copy_to_clipboard(t)
-            select_card(crd)
+            select_card(crd, list(lbls))
 
+        card.bind('<Button-1>', on_click)
+        album_label.bind('<Button-1>', on_click)
         text_label.bind('<Button-1>', on_click)
-        card.bind('<Button-1>', lambda e, crd=card: select_card(crd))
 
-        def resize(event, lbl=text_label, album_lbl=album_label, container=card):
+        def resize(event, lbl=text_label, alb=album_label, container=card):
             wrap = container.winfo_width() - 20
             if wrap > 50:
                 lbl.config(wraplength=wrap)
-                album_lbl.config(wraplength=wrap)
+                alb.config(wraplength=wrap)
 
         card.bind('<Configure>', resize)
 
@@ -156,7 +183,7 @@ album_counter = count_album_occurrences(csv_file)
 # GUI
 root = tk.Tk()
 root.title('RYM Sponsorship Tool')
-root.geometry('1000x900+3440+200')
+root.geometry('1000x900')
 
 input_frame = tk.Frame(root)
 input_frame.pack(fill=tk.BOTH, expand=True)
