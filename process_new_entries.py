@@ -281,7 +281,7 @@ day_offset = 0
 
 root = tk.Tk()
 root.title("RYM Sponsorship Tool")
-root.geometry(f"{WINDOW_WIDTH}x{WINDOW_HEIGHT}+3440+380")
+root.geometry(f"{WINDOW_WIDTH}x{WINDOW_HEIGHT}")
 root.minsize(1000, 400)
 root.maxsize(1800, 1000)
 
