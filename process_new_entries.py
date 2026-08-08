@@ -88,7 +88,7 @@ def build_date_string(day_offset: int) -> str:
     return today.strftime(DATE_FORMAT.format(day_with_ordinal=f"{day}{suffix}"))
 
 
-def process_input(entries: list[str]) -> list[dict]:
+def process_input(entries: list[str], album_counter: Counter, day_offset: int) -> list[dict]:
     process_new_entries(entries, album_counter)
 
     date_str = build_date_string(day_offset)
@@ -118,7 +118,7 @@ def process_input(entries: list[str]) -> list[dict]:
     return cards[::-1]
 
 
-def apply_day_offset(cards: list[dict]) -> list[dict]:
+def apply_day_offset(cards: list[dict], day_offset: int) -> list[dict]:
     date_str = build_date_string(day_offset)
     new_cards = []
     for item in cards:
@@ -139,7 +139,7 @@ def apply_day_offset(cards: list[dict]) -> list[dict]:
 # Clipboard helper
 # ============================================================
 
-def copy_to_clipboard(text: str) -> None:
+def copy_to_clipboard(root: tk.Tk, text: str) -> None:
     root.clipboard_clear()
     root.clipboard_append(text)
     root.update()
@@ -148,7 +148,7 @@ def copy_to_clipboard(text: str) -> None:
 # UI rendering
 # ============================================================
 
-def show_processed_view(items: list[dict]) -> None:
+def show_processed_view(root, items, day_offset, album_counter):
     input_frame.pack_forget()
 
     output_container.pack(fill=tk.BOTH, expand=True)
@@ -166,16 +166,14 @@ def show_processed_view(items: list[dict]) -> None:
     btn_frame.grid(row=0, column=0, columnspan=CARD_COLUMNS, pady=10)
 
     def subtract_one_day():
-        global day_offset
-        day_offset += 1
-        updated = apply_day_offset(items)
-        show_processed_view(updated)
+        new_offset = day_offset + 1
+        updated = apply_day_offset(items, new_offset)
+        show_processed_view(root, updated, new_offset, album_counter)
 
     def add_one_day():
-        global day_offset
-        day_offset -= 1
-        updated = apply_day_offset(items)
-        show_processed_view(updated)
+        new_offset = day_offset - 1
+        updated = apply_day_offset(items, new_offset)
+        show_processed_view(root, updated, new_offset, album_counter)
 
     minus_button = tk.Button(btn_frame, text="-1 Day", command=subtract_one_day)
     minus_button.pack(side=tk.LEFT, padx=10)
@@ -247,7 +245,7 @@ def show_processed_view(items: list[dict]) -> None:
         text_label.pack(anchor="w", fill=tk.X)
 
         def on_click(event, t=item["text"], crd=card, lbls=(album_label, text_label)):
-            copy_to_clipboard(t)
+            copy_to_clipboard(root, t)
             select_card(crd, list(lbls))
 
         for widget in (card, album_label, text_label):
@@ -260,7 +258,7 @@ def show_processed_view(items: list[dict]) -> None:
 # Event handlers
 # ============================================================
 
-def on_submit():
+def on_submit(root, album_counter, day_offset):
     raw_text = text_area.get("1.0", tk.END).strip()
     if not raw_text:
         messagebox.showerror("Error", "No entries provided")
@@ -268,9 +266,9 @@ def on_submit():
 
     entries = raw_text.split("\n")
 
-    items = process_input(entries)
+    items = process_input(entries, album_counter, day_offset)
     save_album_counts_to_csv(CSV_PATH, album_counter, entries)
-    show_processed_view(items)
+    show_processed_view(root, items, day_offset, album_counter)
 
 # ============================================================
 # Application bootstrap
@@ -303,7 +301,11 @@ input_label.pack(anchor="nw", padx=10, pady=(10, 0))
 text_area = scrolledtext.ScrolledText(input_frame, wrap=tk.WORD)
 text_area.pack(fill=tk.BOTH, expand=True, padx=10, pady=5)
 
-submit_button = tk.Button(input_frame, text="Submit", command=on_submit)
+submit_button = tk.Button(
+    input_frame,
+    text="Submit",
+    command=lambda: on_submit(root, album_counter, day_offset)
+)
 submit_button.pack(pady=10)
 
 def _on_mousewheel(event):
