@@ -151,7 +151,7 @@ def copy_to_clipboard(root: tk.Tk, text: str) -> None:
 def show_processed_view(root, items, day_offset, album_counter):
     input_frame.pack_forget()
 
-    output_container.pack(fill=tk.BOTH, expand=True)
+    output_container.pack(fill=tk.BOTH, expand=True, pady=(55, 0))
     canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
     scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
 
@@ -160,10 +160,12 @@ def show_processed_view(root, items, day_offset, album_counter):
 
     # ============================================================
     # Buttons: -1 Day and +1 Day
+    # Keep the buttons fixed at the top of the window while the
+    # cards underneath them can be scrolled.
     # ============================================================
 
-    btn_frame = tk.Frame(output_frame)
-    btn_frame.grid(row=0, column=0, columnspan=CARD_COLUMNS, pady=10)
+    btn_frame = tk.Frame(root)
+    btn_frame.place(relx=0.5, y=10, anchor="n")
 
     def subtract_one_day():
         new_offset = day_offset + 1
@@ -279,7 +281,7 @@ day_offset = 0
 
 root = tk.Tk()
 root.title("RYM Sponsorship Tool")
-root.geometry(f"{WINDOW_WIDTH}x{WINDOW_HEIGHT}")
+root.geometry(f"{WINDOW_WIDTH}x{WINDOW_HEIGHT}+3440+380")
 root.minsize(1000, 400)
 root.maxsize(1800, 1000)
 
